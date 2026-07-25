@@ -32,8 +32,8 @@ def run_write(sql: str, params: tuple | None = None) -> int:
     conn = get_connection()
     try:
         with conn.cursor() as cursor:
-            affected = cursor.execute(sql, params or ())
-        # conn.commit()
+            cursor.execute(sql, params or ())
+            affected = cursor.rowcount  
         return affected
     finally:
         cursor.close()
@@ -44,10 +44,7 @@ def call_procedure(proc_name: str, params: tuple = ()) -> list[pd.DataFrame]:
     try:
         with conn.cursor(dictionary=True) as cursor:
             cursor.callproc(proc_name, params)
-            results = [pd.DataFrame(cursor.fetchall())]
-            while cursor.nextset():
-                results.append(pd.DataFrame(cursor.fetchall()))
-        # conn.commit()
+            results = [pd.DataFrame(r.fetchall()) for r in cursor.stored_results()]
         return [df for df in results if not df.empty]
     finally:
         cursor.close()

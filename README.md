@@ -201,8 +201,8 @@ This project demonstrates practical experience with:
 | Team Member | Contribution |
 |-------------|--------------|
 | **Sarthak Mukherjee** | Database design & SQL development |
-| **Subhayan Mitra** | Streamlit dashboard development & backend development |
 | **Sayar Sekhar Ghosh** | AI integration & testing |
+| **Subhayan Mitra** | Streamlit dashboard development & backend development |
 | **Surojit Jana** | Database connectivity, project integration & GitHub management |
 
 ---

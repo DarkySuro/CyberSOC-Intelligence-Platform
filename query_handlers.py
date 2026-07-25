@@ -10,30 +10,11 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", "3306")),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "autocommit": True
+    "database": os.getenv("DB_NAME")
 }
 
 def get_connection():
-    conn = connector.connect(**DB_CONFIG)
-
-    try:
-        with open('soc.sql', 'r') as file:
-            sql_file = file.read()
-
-        cursor = conn.cursor()
-        print('Executing SQL file batches...')
-         # multi=True easily parses triggers and complex blocks without client delimiters
-        for result in cursor.execute(sql_file, multi=True):
-            # Safely consume any metadata or returned rows to prevent sync bugs
-            if result.with_rows:
-                result.fetchall()
-        return conn
-    except:
-        print('Database cannot be created!')
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-        
+    return connector.connect(**DB_CONFIG)
 
 def run_query(sql: str, params: tuple | None = None) -> pd.DataFrame:
     conn = get_connection()

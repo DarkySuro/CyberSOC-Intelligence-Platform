@@ -4,7 +4,7 @@ import pandas as pd
 import altair as alt
 from datetime import datetime
  
-from db import run_query, run_write, call_procedure
+from query_handlers import run_query, run_write, call_procedure
 from ai_helper import summarize_incident, ask_about_data
  
 st.set_page_config(page_title="Security Operations Center", page_icon="🛡️", layout="wide")

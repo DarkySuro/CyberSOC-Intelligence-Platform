@@ -1,34 +1,31 @@
 # 🛡️ CyberSOC Intelligence Platform
 
-An AI-powered Security Operations Center (SOC) dashboard designed to help security analysts investigate, manage, and analyze cybersecurity incidents through an interactive dashboard integrated with Google's Gemini AI.
+An AI-powered Security Operations Center (SOC) dashboard that combines traditional incident management with AI-assisted analysis, built with Streamlit, MySQL, and Groq.
 
 ---
 
 ## 📌 Overview
 
-CyberSOC Intelligence Platform is a Python-based Security Operations Center (SOC) application that combines traditional incident management with Artificial Intelligence.
+CyberSOC Intelligence Platform is a Python-based SOC application that lets analysts investigate, manage, and analyze security incidents through an interactive dashboard, backed by a MySQL database and an AI assistant powered by Groq's fast open-model inference.
 
 The platform enables analysts to:
 
 - View and manage security incidents
-- Store and retrieve incidents from a MySQL database
-- Perform AI-assisted incident analysis
-- Ask security-related questions using Google Gemini
-- Monitor incident information through an intuitive dashboard
-
-This project demonstrates how AI can enhance SOC workflows by providing intelligent insights during security investigations.
+- Detect brute-force login patterns and flag suspicious activity
+- Track assets by criticality and link them to incidents
+- Run ad-hoc read-only SQL queries against the incident data
+- Get AI-generated incident summaries and ask natural-language questions about the current data
 
 ---
 
 ## 🚀 Features
 
-- 📊 Interactive SOC Dashboard
-- 🤖 Google Gemini AI Integration
-- 🗄️ MySQL Database Connectivity
-- 🔍 AI-assisted Incident Analysis
-- 📋 Incident Management
-- ⚡ Real-time Database Operations
-- 🔐 Environment Variable Support using `.env`
+- 📊 Interactive multi-page SOC dashboard (Overview, Incidents, Brute-Force Detection, Assets, Add Incident, Ad-hoc Query, AI Assistant)
+- 🤖 AI-assisted incident summaries and Q&A via Groq
+- 🗄️ MySQL schema with tables, a view, a trigger, and stored procedures
+- 🔐 Role-based access control (`soc_analyst` read-only role, `soc_admin` full-access role)
+- 🔎 Full-text search over incident titles
+- ⚡ Real-time queries and charts (Altair)
 - 🐍 Built entirely with Python
 
 ---
@@ -38,12 +35,13 @@ This project demonstrates how AI can enhance SOC workflows by providing intellig
 ```
 CyberSOC-Intelligence-Platform/
 │
-├── app.py                 # Main Streamlit application
-├── db.py                  # Database connection & queries
-├── ai_helper.py           # Gemini AI integration
-├── soc.sql                # MySQL database schema
+├── app.py                 # Main Streamlit application (all dashboard pages)
+├── query_handlers.py      # MySQL connection, SELECT/write queries, stored-procedure calls
+├── db_config.py           # One-time DB setup: creates schema, tables, view, trigger, procedures, RBAC users
+├── ai_helper.py           # Groq AI integration (incident summaries, data Q&A)
+├── soc.sql                # Full MySQL schema, sample data, view/trigger/procedure definitions
 ├── requirements.txt       # Python dependencies
-├── .env                   # Environment variables (not included)
+├── .env                   # Environment variables (not committed — create this yourself)
 └── README.md
 ```
 
@@ -53,12 +51,13 @@ CyberSOC-Intelligence-Platform/
 
 | Technology | Purpose |
 |------------|---------|
-| Python | Backend Development |
-| Streamlit | Dashboard Interface |
+| Python | Backend development |
+| Streamlit | Dashboard interface |
 | MySQL | Database |
-| Google Gemini AI | AI-powered Analysis |
-| Python Dotenv | Environment Variables |
-| Pandas | Data Processing |
+| Groq | AI-powered incident analysis |
+| mysql-connector-python | Database driver |
+| python-dotenv | Environment variable management |
+| Pandas / Altair | Data processing & charts |
 
 ---
 
@@ -68,33 +67,28 @@ CyberSOC-Intelligence-Platform/
 
 ```bash
 git clone https://github.com/OfficialSubhayan/CyberSOC-Intelligence-Platform.git
-
 cd CyberSOC-Intelligence-Platform
 ```
 
-### Create Virtual Environment
+### Create a virtual environment
 
 ```bash
 python -m venv .venv
 ```
 
-Activate it
+Activate it:
 
-Windows
-
+**Windows**
 ```bash
 .venv\Scripts\activate
 ```
 
-Linux/Mac
-
+**Linux/Mac**
 ```bash
 source .venv/bin/activate
 ```
 
----
-
-### Install Dependencies
+### Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -102,31 +96,44 @@ pip install -r requirements.txt
 
 ---
 
-## 🗄️ Database Setup
+## 🔑 Configure environment variables
 
-1. Create a MySQL database.
-
-2. Import the SQL file.
-
-```sql
-source soc.sql;
-```
-
----
-
-## 🔑 Configure Environment Variables
-
-Create a `.env` file.
+Create a `.env` file in the project root:
 
 ```env
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=your_database_name
 DB_USER=your_username
 DB_PASSWORD=your_password
+DB_NAME=SecurityOpsCenter
 
-GOOGLE_API_KEY=your_gemini_api_key
+GROQ_API_KEY=your_groq_api_key
 ```
+
+> Get a Groq API key at [console.groq.com](https://console.groq.com).
+
+---
+
+## 🗄️ Database Setup
+
+Make sure a MySQL server is running and reachable with the credentials in your `.env`. That's it — you don't need to run anything else manually.
+
+The first time you launch the app (see [Run the Application](#️-run-the-application) below), it automatically checks whether the `SecurityOpsCenter` database exists yet. If it doesn't, it creates the schema, seeds sample data, and sets up the view, trigger, stored procedures, and RBAC users for you — you'll see a brief "Checking database..." spinner while this happens. On every run after that, the check finds the database already there and skips setup instantly, so your data (added incidents, etc.) is never wiped by a normal restart.
+
+If you ever want to force a full reset back to the seeded sample data, you can still run the initializer directly — **note this drops and recreates the entire database**, discarding any data you've added:
+
+```bash
+python db_config.py
+```
+
+You should see:
+```
+Connecting to MySQL server...
+Executing 55 SQL statements...
+Database initialization complete.
+```
+
+If a specific statement fails, the script prints which one and its SQL so you can diagnose it directly.
 
 ---
 
@@ -136,73 +143,56 @@ GOOGLE_API_KEY=your_gemini_api_key
 streamlit run app.py
 ```
 
-The dashboard will open automatically in your browser.
+The dashboard opens automatically in your browser.
 
 ---
 
 ## 🤖 AI Module
 
-The application integrates Google Gemini AI to assist SOC analysts by:
+The AI Assistant page uses Groq to:
 
-- Explaining security incidents
-- Summarizing alerts
-- Providing threat analysis
-- Answering cybersecurity-related queries
-- Improving analyst productivity
+- Summarize a selected incident in plain English for non-technical stakeholders
+- Answer natural-language questions grounded strictly in the current incident data (it's instructed not to invent details)
 
----
-
-## 📂 Database
-
-The project uses MySQL for storing SOC incident information.
-
-Typical information includes:
-
-- Incident ID
-- Incident Type
-- Severity
-- Source
-- Status
-- Description
-- Timestamp
+Model used: `groq/compound` 
 
 ---
 
-## 📸 Dashboard Preview
+## 📂 Database Schema Highlights
 
-> Add screenshots of your dashboard here.
-
-Example:
-
-<img width="1900" height="820" alt="image" src="https://github.com/user-attachments/assets/7ae5f7bd-60c4-4b70-b1c0-b442b5651be1" />
+| Object | Type | Purpose |
+|--------|------|---------|
+| `Employees`, `Assets`, `Vulnerabilities`, `Incidents`, `AccessLogs` | Tables | Core SOC data |
+| `IncidentAssets`, `IncidentVulnerabilities` | Tables | Many-to-many links |
+| `SuspiciousActivity` | View | Employees/assets with ≥3 failed access attempts |
+| `trg_flag_critical_incident` | Trigger | Auto-escalates an incident to Critical severity when a linked vulnerability is Critical |
+| `GetIncidentsByAsset(assetID)` | Procedure | Lists incidents tied to a given asset |
+| `LockAccountAfterNFailures(employeeID, threshold)` | Procedure | Flags an employee who exceeded N failed logins in the last hour |
+| `soc_analyst` / `soc_admin` | MySQL users | Read-only vs. full-access roles |
 
 ---
 
 ## 📈 Future Enhancements
 
-- SIEM Integration
-- Threat Intelligence APIs
-- User Authentication
-- Alert Correlation
-- MITRE ATT&CK Mapping
-- Incident Timeline
-- PDF Report Generation
-- Role-Based Access Control
-- SOC Analytics Dashboard
+- SIEM integration
+- Threat intelligence API feeds
+- User authentication for the dashboard itself
+- Alert correlation across incidents
+- MITRE ATT&CK mapping
+- Incident timeline view
+- PDF report generation
 
 ---
 
 ## 🎯 Learning Objectives
 
-This project demonstrates practical knowledge of:
+This project demonstrates practical experience with:
 
-- Python Programming
-- SQL Database Management
-- AI Integration
-- Environment Variable Management
-- Streamlit Dashboard Development
-- Security Operations Center (SOC) Concepts
-- Incident Management
+- Python & Streamlit application development
+- SQL database design (schema, views, triggers, stored procedures, RBAC)
+- AI integration for real-world analyst workflows
+- Environment variable / secrets management
+- Security Operations Center (SOC) concepts and incident management
 
 ---
 
@@ -210,10 +200,10 @@ This project demonstrates practical knowledge of:
 
 | Team Member | Contribution |
 |-------------|--------------|
-| **Sarthak Mukherjee** | Database Design & SQL Development |
-| **Surojit Jana** | Streamlit Dashboard Development |
-| **Sayar Sekhar Ghosh** | AI Integration & Testing |
-| **Subhayan Mitra** | Backend Development, Database Connectivity, Project Integration & GitHub Management |
+| **Sarthak Mukherjee** | Database design & SQL development |
+| **Subhayan Mitra** | Streamlit dashboard development & backend development |
+| **Sayar Sekhar Ghosh** | AI integration & testing |
+| **Subhayan Mitra** | Database connectivity, project integration & GitHub management |
 
 ---
 

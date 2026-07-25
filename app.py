@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -6,8 +5,31 @@ from datetime import datetime
  
 from query_handlers import run_query, run_write, call_procedure
 from ai_helper import summarize_incident, ask_about_data
+from db_config import ensure_db_initialized
  
 st.set_page_config(page_title="Security Operations Center", page_icon="🛡️", layout="wide")
+
+# ---------------------------------------------------------------------------
+# One-time DB setup (only runs the actual init if the DB doesn't exist yet;
+# cache_resource ensures this check itself only runs once per server process,
+# not on every widget interaction/rerun)
+# ---------------------------------------------------------------------------
+@st.cache_resource
+def _startup_db_check():
+    ensure_db_initialized()
+    return True
+
+try:
+    with st.spinner("Checking database..."):
+        _startup_db_check()
+except Exception as e:
+    st.error(
+        f"Database setup failed: {e}\n\n"
+        "Check your .env (DB_HOST/DB_PORT/DB_USER/DB_PASSWORD) and that "
+        "your MySQL server is reachable, then restart the app."
+    )
+    st.stop()
+
  
 # ---------------------------------------------------------------------------
 # Sidebar navigation
@@ -237,7 +259,7 @@ elif page == "AI Assistant":
             if st.button("Generate Summary"):
                 row = incidents_df[incidents_df["IncidentID"] == chosen_id].iloc[0].to_dict()
                 try:
-                    with st.spinner("Asking Gemini..."):
+                    with st.spinner("Asking AI..."):
                         summary = summarize_incident(row)
                     st.success(summary)
                 except Exception as e:
@@ -249,9 +271,8 @@ elif page == "AI Assistant":
         if st.button("Ask"):
             context_df = run_query("SELECT * FROM Incidents")
             try:
-                with st.spinner("Asking Gemini..."):
+                with st.spinner("Asking AI..."):
                     answer = ask_about_data(question, context_df)
                 st.write(answer)
             except Exception as e:
                 st.error(f"AI call failed: {e}")
- 

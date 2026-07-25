@@ -115,7 +115,7 @@ elif page == "Incidents":
  
     st.divider()
     st.subheader("Suspicious Activity View")
-    st.caption("Pulls from the `SuspiciousActivity` view defined in the schema.")
+ 
     try:
         st.dataframe(run_query("SELECT * FROM SuspiciousActivity"), use_container_width=True)
     except Exception as e:

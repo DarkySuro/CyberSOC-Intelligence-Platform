@@ -1,4 +1,4 @@
-
+-- Drop the Database if already exists for clean execution
 DROP DATABASE IF EXISTS SecurityOpsCenter;
 
 -- Step 1 — Create the Database

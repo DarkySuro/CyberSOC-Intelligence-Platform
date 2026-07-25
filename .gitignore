@@ -1,0 +1,16 @@
+# Secrets and Credentials
+.env
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+
+# Python Cache and Compiled bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE Settings (Optional)
+.vscode/
